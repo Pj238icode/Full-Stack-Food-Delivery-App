@@ -1,15 +1,13 @@
-# Use an official OpenJDK runtime as a parent image
-FROM eclipse-temurin:21-jdk-alpine
-
-# Set a working directory inside the container
+# Stage 1: Build the JAR
+FROM maven:3.9.2-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy the Maven build artifact (JAR) into the container
-COPY target/foodiesapi-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the port the app runs on
+# Stage 2: Run the app
+FROM eclipse-temurin:21-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/foodiesapi-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8081
-
-
-# Run the JAR file
 ENTRYPOINT ["java", "-jar", "app.jar"]
